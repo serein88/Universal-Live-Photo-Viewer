@@ -41,3 +41,36 @@
   4. `git check-ignore -v AGENTS.md TASK.md PROGRESS.md` 输出 `not_ignored`。  
 - 阻塞/风险：当前是计划层拆分，实际优先级仍需在执行中根据阻塞动态微调。  
 - 下一步：领取 `T2-1` 并开始 Phase 1 的接口与模型实现。
+
+### 2026-02-19 09:59:46 | T8 | 进行中 -> 待确认
+- 本轮目标：按外部安装文档完成 superpowers 技能安装并验证链接生效。  
+- 实施内容：  
+  1. 拉取并阅读 `https://raw.githubusercontent.com/obra/superpowers/refs/heads/main/.codex/INSTALL.md`。  
+  2. 执行克隆：`git clone https://github.com/obra/superpowers.git "$env:USERPROFILE\\.codex\\superpowers"`。  
+  3. 执行 Windows 链接步骤：创建 `"$env:USERPROFILE\\.agents\\skills"`，并用 `mklink /J` 创建 `superpowers` Junction。  
+  4. 检查旧 bootstrap：`$env:USERPROFILE\\.codex\\AGENTS.md` 不存在，无需迁移清理。  
+- 验证证据（可复现）：  
+  1. `Get-Item "$env:USERPROFILE\\.agents\\skills\\superpowers"` 显示 `LinkType: Junction`、`Target: C:\\Users\\languoer\\.codex\\superpowers\\skills`。  
+  2. `Get-ChildItem "$env:USERPROFILE\\.agents\\skills\\superpowers"` 可列出技能目录（如 `brainstorming`、`systematic-debugging`）。  
+  3. 克隆命令返回成功，目标目录已创建。  
+- 阻塞/风险：技能发现需要重启 Codex 进程后才会生效，本轮无法在当前会话内完成“重启后发现”验证。  
+- 下一步：你重启 Codex 后确认技能可见；确认后将 `T8` 更新为 `完成`。
+
+### 2026-02-19 10:04:45 | T8 | 待确认 -> 完成
+- 本轮目标：根据用户确认关闭 T8。  
+- 实施内容：在 `TASK.md` 将 `T8` 状态更新为 `完成`，并记录确认时间。  
+- 验证证据（可复现）：`TASK.md` 的 `T8` 行状态为 `完成`。  
+- 阻塞/风险：无。  
+- 下一步：进入 `T9` 头脑风暴任务。
+
+### 2026-02-19 10:04:45 | T9 | 待进行 -> 进行中
+- 本轮目标：启动 ULPV 项目头脑风暴，形成可执行设计方向。  
+- 实施内容：  
+  1. 按技能流程使用 `using-superpowers`，确认技能优先与使用顺序。  
+  2. 使用 `brainstorming`，先完成上下文探索（项目文件、任务列表、README、最近提交）。  
+  3. 准备进入“一次一个问题”的澄清阶段。  
+- 验证证据（可复现）：  
+  1. `TASK.md` 新增 `T9` 且状态为 `进行中`。  
+  2. 项目上下文已被扫描（含 `README.md`、`TASK.md`、`PROGRESS.md`、最近提交记录）。  
+- 阻塞/风险：若目标边界不清晰，会导致方案发散，需先锁定 V1 成功标准。  
+- 下一步：向用户提出第一个澄清问题（仅一问），再给出 2-3 个方案对比。
