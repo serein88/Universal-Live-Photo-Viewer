@@ -92,3 +92,19 @@
   3. 目录证据：`lib/application`、`lib/data`、`lib/domain`、`lib/ui` 已创建。  
 - 阻塞/风险：`ffmpeg_kit_flutter` 目前为 discontinued 包；后续 `T6-1` 需要评估替代方案与兼容性。  
 - 下一步：等待你确认 `T2-1`；确认后进入 `T2-2`（Domain 实体与解析接口）。  
+
+### 2026-02-19 18:09:33 | T2-2 | 进行中 -> 待确认
+- 本轮目标：完成 Domain 层实体与解析接口（`LivePhotoType`、`LivePhotoEntity`、`LivePhotoParser`）。  
+- 实施内容：  
+  1. 领取任务：`T2-1` 标记为 `完成`，`T2-2` 标记为 `进行中`。  
+  2. 按 TDD 写 RED 测试：新增 `test/domain/live_photo_entity_test.dart` 与 `test/domain/live_photo_parser_contract_test.dart`。  
+  3. 执行 RED：`flutter test test/domain -r expanded`，确认因缺失 `lib/domain/*.dart` 编译失败。  
+  4. 写最小实现：新增 `lib/domain/live_photo_type.dart`、`lib/domain/live_photo_entity.dart`、`lib/domain/live_photo_parser.dart`。  
+  5. 执行 GREEN：`flutter test test/domain -r expanded`，全部通过。  
+  6. 更新看板：`T2-2` 标记为 `待确认`。  
+- 验证证据（可复现）：  
+  1. RED 证据：测试输出 `Error when reading 'lib/domain/live_photo_entity.dart'`。  
+  2. GREEN 证据：`00:00 +4: All tests passed!`（`test/domain`）。  
+  3. 文件证据：`lib/domain/live_photo_type.dart`、`lib/domain/live_photo_entity.dart`、`lib/domain/live_photo_parser.dart` 存在。  
+- 阻塞/风险：使用 PowerShell `Set-Content` 更新 `TASK.md` 时出现文件锁，曾导致文件被截断；后续统一改用补丁方式更新看板。  
+- 下一步：等待你确认 `T2-2`；确认后进入 `T2-3`（Application Ports 与用例编排）。  
