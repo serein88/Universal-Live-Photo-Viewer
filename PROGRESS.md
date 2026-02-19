@@ -74,3 +74,21 @@
   2. 项目上下文已被扫描（含 `README.md`、`TASK.md`、`PROGRESS.md`、最近提交记录）。  
 - 阻塞/风险：若目标边界不清晰，会导致方案发散，需先锁定 V1 成功标准。  
 - 下一步：向用户提出第一个澄清问题（仅一问），再给出 2-3 个方案对比。
+
+### 2026-02-19 17:45:36 | T2-1 | 进行中 -> 待确认
+- 本轮目标：完成 Flutter 项目骨架初始化与 smoke 测试基线（TDD）。  
+- 实施内容：  
+  1. 领取 `T2-1` 并写入失败测试：`test/smoke/project_bootstrap_test.dart`。  
+  2. 执行 RED：`flutter test test/smoke/project_bootstrap_test.dart -r expanded`，首次失败原因为缺少 Flutter 环境。  
+  3. 安装本地 Flutter SDK 到 `C:\\Users\\languoer\\flutter-sdk`（不修改系统全局 PATH）。  
+  4. 再次执行 RED，失败原因为项目未初始化（缺少 `pubspec.yaml`），满足 TDD 预期。  
+  5. 执行最小实现：`flutter create .` 初始化项目；新增 `lib/application/.gitkeep`、`lib/data/.gitkeep`、`lib/domain/.gitkeep`、`lib/ui/.gitkeep`。  
+  6. 更新 `pubspec.yaml`，加入 V1 关键依赖：`provider`、`file_picker`、`extended_image`、`video_player`、`ffmpeg_kit_flutter`、`xml`、`exif`。  
+  7. 执行 GREEN：`flutter test test/smoke/project_bootstrap_test.dart -r expanded` 通过。  
+  8. 将 `TASK.md` 中 `T2-1` 更新为 `待确认`。  
+- 验证证据（可复现）：  
+  1. RED 证据：`Error: No pubspec.yaml file found.`  
+  2. GREEN 证据：`All tests passed!`（`test/smoke/project_bootstrap_test.dart`）。  
+  3. 目录证据：`lib/application`、`lib/data`、`lib/domain`、`lib/ui` 已创建。  
+- 阻塞/风险：`ffmpeg_kit_flutter` 目前为 discontinued 包；后续 `T6-1` 需要评估替代方案与兼容性。  
+- 下一步：等待你确认 `T2-1`；确认后进入 `T2-2`（Domain 实体与解析接口）。  
