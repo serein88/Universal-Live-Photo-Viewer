@@ -179,7 +179,13 @@ class LivePhotoEntity {
 
 ---
 
-## 7. 附录：关键协议特征 (Protocol Reference)
+## 7. 质量门禁与发布检查 (Quality Gates)
+* 一键门禁脚本：`powershell -ExecutionPolicy Bypass -File tool/test_matrix.ps1`
+* 门禁与发布检查清单：`docs/testing/v1-gates.md`
+* 样本统计命令：`$env:USERPROFILE\flutter-sdk\bin\dart.bat run bin/evaluate_v1_samples.dart sample`
+* 失败报告命令：`$env:USERPROFILE\flutter-sdk\bin\dart.bat run bin/report_v1_failures.dart sample`
+
+## 8. 附录：关键协议特征 (Protocol Reference)
 * **Xiaomi / Google (Motion Photo)**  
   - 关键标识：XMP 中 `MicroVideo` / `GCamera:MicroVideo`。  
   - 解析方式：读取 Offset 后二进制切片。

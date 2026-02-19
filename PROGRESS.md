@@ -176,3 +176,73 @@
   3. 回归证据：跨 `smoke + domain + application + data/parsers + integration` 输出 `All tests passed!`。  
 - 阻塞/风险：CLI 当前输出基础摘要字段，后续可在 `T3` 阶段扩展统计维度（失败类型聚类、品牌识别分布、耗时）。  
 - 下一步：等待你确认 `T2-6`；确认后将 `T2` 母任务推进至 `待确认` 并进入 `T3-1`。  
+
+### 2026-02-19 19:53:27 | T3-2 | 进行中 -> 完成
+- 本轮目标：完成样本统计脚本并验证“识别率/可播放率/失败分布”可稳定输出。  
+- 实施内容：  
+  1. 新增 `test/integration/v1_sample_metrics_test.dart`，覆盖统计字段完整性与比率区间校验。  
+  2. 新增 `bin/evaluate_v1_samples.dart`，实现清单读取、目录扫描、指标计算与 CLI JSON 输出。  
+  3. 执行任务测试：`$env:USERPROFILE\\flutter-sdk\\bin\\flutter.bat test test/integration/v1_sample_metrics_test.dart -r expanded`。  
+  4. 执行脚本验证：`$env:USERPROFILE\\flutter-sdk\\bin\\dart.bat run bin/evaluate_v1_samples.dart sample`。  
+  5. 执行重复运行对比（两次运行比率与计数比对）。  
+- 验证证据（可复现）：  
+  1. 测试通过：`00:05 +2: All tests passed!`。  
+  2. 统计输出：`total_manifest_items=12`、`expected_live_count=6`、`recognized_live_count=6`、`playable_live_count=6`。  
+  3. 比率输出：`recognition_rate=1.0`、`playable_rate=1.0`。  
+  4. 重复运行一致性：`same_totals=True`。  
+- 阻塞/风险：CSV 解析当前为轻量实现（支持基础引号场景），后续若引入更复杂字段需补充边界测试。  
+- 下一步：进入 `T3-3`，补齐失败样本明细报告与可复现命令输出。  
+
+### 2026-02-19 19:58:57 | T3-3 | 进行中 -> 完成
+- 本轮目标：实现失败样本报告，满足 `file_path + error_code + stage + reproduce_command`。  
+- 实施内容：  
+  1. 新增 RED 测试 `test/integration/v1_failure_report_test.dart`，构造“清单声明 live 但样本缺失”的失败场景。  
+  2. 执行 RED：`$env:USERPROFILE\\flutter-sdk\\bin\\flutter.bat test test/integration/v1_failure_report_test.dart -r expanded`（缺少 `bin/report_v1_failures.dart`）。  
+  3. 新增 `bin/report_v1_failures.dart`：实现失败项聚合（recognition/parsing/playability）、错误码提取与 `--focus` 复现过滤。  
+  4. 执行 GREEN：`$env:USERPROFILE\\flutter-sdk\\bin\\flutter.bat test test/integration/v1_failure_report_test.dart -r expanded`。  
+  5. 执行集成回归：`$env:USERPROFILE\\flutter-sdk\\bin\\flutter.bat test test/integration -r compact`。  
+  6. 执行 CLI 样例验证（注入一条故意缺失样本）并确认报告字段完整。  
+- 验证证据（可复现）：  
+  1. GREEN 证据：`00:02 +1: All tests passed!`（`test/integration/v1_failure_report_test.dart`）。  
+  2. 集成回归证据：`00:09 +5: All tests passed!`（`test/integration`）。  
+  3. CLI 输出证据：`total_failures=1`，`failures_by_stage.recognition=1`，并包含 `file_path/error_code/stage/reproduce_command`。  
+- 阻塞/风险：当前失败复现命令以 CLI 维度复现，不含更细粒度的单文件诊断日志；后续可在门禁阶段补充 verbose 模式。  
+- 下一步：进入 `T3-4`，补齐质量门禁脚本与发布前检查文档。  
+
+### 2026-02-19 20:03:25 | T3-4 | 进行中 -> 完成
+- 本轮目标：交付可执行质量门禁脚本，并补齐发布前检查文档与 README 入口。  
+- 实施内容：  
+  1. 先执行 RED 检查：`powershell -ExecutionPolicy Bypass -File tool/test_matrix.ps1`（脚本不存在，符合预期失败）。  
+  2. 新增 `tool/test_matrix.ps1`，实现 V1 门禁命令矩阵（smoke/domain/application/parsers/integration）与失败即停。  
+  3. 新增 `docs/testing/v1-gates.md`，固化门禁执行方式、发布前检查项与复核命令。  
+  4. 更新 `README.md` 增加“质量门禁与发布检查”入口。  
+  5. 验证中发现脚本聚合逻辑误判（测试输出被计入结果），修复 `Invoke-Expression` 输出处理与统计条件后重跑。  
+  6. 执行 `-DryRun` 与真实执行两种验证，确认门禁命令可执行并返回成功。  
+- 验证证据（可复现）：  
+  1. RED 证据：`The argument 'tool/test_matrix.ps1' to the -File parameter does not exist.`  
+  2. DryRun 证据：`Gate Summary: passed=5 failed=0 total=5`。  
+  3. 实跑证据：`Gate Summary: passed=5 failed=0 total=5` 且 `All gate steps passed.`。  
+  4. 文档入口证据：`README.md` 已包含 `tool/test_matrix.ps1` 与 `docs/testing/v1-gates.md` 引用。  
+- 阻塞/风险：当前门禁未自动统计覆盖率阈值（85%/80%），现阶段仍依赖测试套件通过与样本指标脚本。  
+- 下一步：进入 `T4-1`（Windows MVP 工程初始化）。  
+
+### 2026-02-19 20:09:47 | T4-1 | 进行中 -> 失败
+- 本轮目标：完成 Windows MVP 工程初始化，验证“可启动运行 + 窗口能力生效”。  
+- 实施内容：  
+  1. 新增 RED 测试 `test/smoke/windows_runner_bootstrap_test.dart`，约束窗口标题与最小尺寸消息处理。  
+  2. 执行 RED：`flutter test test/smoke/windows_runner_bootstrap_test.dart -r expanded`（标题断言失败）。  
+  3. 更新 `windows/runner/main.cpp`：窗口标题改为 `Universal Live Photo Viewer`，起始位置调整为 `(80,60)`。  
+  4. 更新 `windows/runner/win32_window.cpp`：新增 `WM_GETMINMAXINFO`，设置最小尺寸 `960x640`。  
+  5. 执行 GREEN：`flutter test test/smoke/windows_runner_bootstrap_test.dart -r expanded` 通过。  
+  6. 回归验证：`flutter test test/smoke test/widget_test.dart -r compact` 通过。  
+  7. 尝试运行 Windows 构建：`flutter build windows --debug`，被本机环境阻塞。  
+- 验证证据（可复现）：  
+  1. GREEN 证据：`00:00 +1: All tests passed!`（`windows_runner_bootstrap_test.dart`）。  
+  2. 回归证据：`All tests passed!`（`test/smoke + test/widget_test.dart`）。  
+  3. 阻塞证据：`Unable to find suitable Visual Studio toolchain.`。  
+  4. `flutter doctor -v` 证据：`Visual Studio not installed; install Desktop development with C++`。  
+- 阻塞/风险：当前环境缺少 Windows C++ 工具链，无法完成“可启动运行”实机构建验证。  
+- 下一步建议：  
+  1. 安装 Visual Studio（Desktop development with C++，默认组件）。  
+  2. 重新执行 `flutter doctor -v` 直到 Windows toolchain 变为通过。  
+  3. 重试 `flutter build windows --debug`，通过后将 `T4-1` 从 `失败` 改为 `完成` 并继续 `T4-2`。  
