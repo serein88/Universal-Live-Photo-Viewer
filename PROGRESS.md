@@ -263,3 +263,35 @@
   3. `.github/workflows/windows-build.yml` 关键步骤存在：`workflow_dispatch`、`flutter build windows --release`、`upload-artifact`。  
 - 阻塞/风险：当前会话无法直接触发并观察 GitHub Actions 远端首跑结果（未在本地安装 `gh`，且需推送后由 GitHub 执行）。  
 - 下一步：你推送当前改动并在 GitHub Actions 手动触发 `Windows Build`；若产物 `ulpv-windows-release-<sha>` 生成成功，`T4-1` 可改为 `完成` 并进入 `T4-2`。  
+
+### 2026-02-19 23:42:36 | T4-1 | 待确认 -> 待确认（修复补丁）
+- 本轮目标：修复 GitHub Actions 在仓库未提交 `test/` 目录时的硬失败问题。  
+- 实施内容：  
+  1. 根据失败日志定位：`.gitignore` 忽略 `test/`，工作流仍强制执行 `flutter test test/smoke test/widget_test.dart`。  
+  2. 更新 `.github/workflows/windows-build.yml`：  
+     - `Run Smoke and Widget Tests` 改为路径探测后执行，缺失时跳过。  
+     - `Run Core Tests` 改为路径探测后执行，缺失时跳过。  
+  3. 临时将 `T4-1` 置为 `进行中` 完成修复，随后恢复为 `待确认`（等待 Actions 远端重跑结果）。  
+- 验证证据（可复现）：  
+  1. 本地等价验证（路径存在）：两组测试命令均 `All tests passed!`。  
+  2. 本地等价验证（路径缺失模拟）：输出 `No targets found. Skip works.` 并返回成功。  
+  3. 工作流关键变更：新增 `if present` 逻辑与 PowerShell `Test-Path` 探测。  
+- 阻塞/风险：远端 Actions 尚未重跑，Windows 构建产物未在本轮会话内二次确认。  
+- 下一步：你在 GitHub 重新运行 `Windows Build`；若通过并产出 artifact，则将 `T4-1` 标记为 `完成`。  
+
+### 2026-02-19 23:49:35 | T4-1 | 待确认 -> 待确认（非阻断测试策略）
+- 本轮目标：实现“测试失败不影响 GitHub Actions 构建继续执行”。  
+- 实施内容：  
+  1. 将 `T4-1` 临时切为 `进行中` 处理本次 CI 策略调整。  
+  2. 更新 `.github/workflows/windows-build.yml`：  
+     - 为 smoke/widget 测试步骤添加 `id` 与 `continue-on-error: true`。  
+     - 为 core 测试步骤添加 `id` 与 `continue-on-error: true`。  
+     - 新增 `Summarize Test Results`，把测试 `outcome/conclusion` 写入 `GITHUB_STEP_SUMMARY`。  
+  3. 保留“路径存在才执行测试”的逻辑，继续兼容仓库忽略 `test/` 的场景。  
+  4. 处理完成后将 `T4-1` 恢复为 `待确认`。  
+- 验证证据（可复现）：  
+  1. 配置证据：workflow 中存在 `continue-on-error: true`（两处）与 `Summarize Test Results`。  
+  2. 本地命令证据：`flutter test test/smoke test/widget_test.dart -r compact` 输出 `All tests passed!`。  
+  3. 变更证据：`git diff .github/workflows/windows-build.yml` 显示非阻断测试与汇总步骤。  
+- 阻塞/风险：测试失败时 workflow 将继续构建并可能显示成功，质量把关需要通过 summary 或后续人工审核补足。  
+- 下一步：你推送后重跑 `Windows Build`；确认测试失败不阻断且能产出 artifact，再决定是否把该策略长期保留。  

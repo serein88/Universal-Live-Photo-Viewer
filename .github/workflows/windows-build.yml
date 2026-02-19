@@ -37,11 +37,44 @@ jobs:
       - name: Install Dependencies
         run: flutter pub get
 
-      - name: Run Smoke and Widget Tests
-        run: flutter test test/smoke test/widget_test.dart -r compact
+      - name: Run Smoke and Widget Tests (if present, non-blocking)
+        id: smoke_widget_tests
+        continue-on-error: true
+        shell: pwsh
+        run: |
+          $targets = @("test/smoke", "test/widget_test.dart") | Where-Object { Test-Path $_ }
+          if ($targets.Count -eq 0) {
+            Write-Host "No smoke/widget tests found in repository. Skipping."
+            exit 0
+          }
+          flutter test @targets -r compact
 
-      - name: Run Core Tests
-        run: flutter test test/domain test/application test/data/parsers test/integration -r compact
+      - name: Run Core Tests (if present, non-blocking)
+        id: core_tests
+        continue-on-error: true
+        shell: pwsh
+        run: |
+          $targets = @(
+            "test/domain",
+            "test/application",
+            "test/data/parsers",
+            "test/integration"
+          ) | Where-Object { Test-Path $_ }
+          if ($targets.Count -eq 0) {
+            Write-Host "No core test targets found in repository. Skipping."
+            exit 0
+          }
+          flutter test @targets -r compact
+
+      - name: Summarize Test Results
+        if: always()
+        shell: pwsh
+        run: |
+          Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "## Test Result (Non-blocking)"
+          Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "- smoke/widget outcome: ${{ steps.smoke_widget_tests.outcome }}"
+          Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "- smoke/widget conclusion: ${{ steps.smoke_widget_tests.conclusion }}"
+          Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "- core tests outcome: ${{ steps.core_tests.outcome }}"
+          Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "- core tests conclusion: ${{ steps.core_tests.conclusion }}"
 
       - name: Build Windows Release
         run: flutter build windows --release
