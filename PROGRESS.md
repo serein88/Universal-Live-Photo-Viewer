@@ -159,3 +159,20 @@
   3. 回归证据：`smoke + domain + application + data/parsers` 输出 `All tests passed!`。  
 - 阻塞/风险：当前切片逻辑按 `MicroVideoOffset`（文件末尾回推）实现，后续需补充更多非小米样本验证兼容性。  
 - 下一步：等待你确认 `T2-5`；确认后进入 `T2-6`（Parser Registry + CLI 验证入口）。  
+
+### 2026-02-19 19:26:11 | T2-6 | 进行中 -> 待确认
+- 本轮目标：完成 Parser Registry 与 CLI 验证入口，输出结构化扫描结果。  
+- 实施内容：  
+  1. 按 TDD 写 RED 测试：新增 `test/integration/verify_live_photo_cli_test.dart`。  
+  2. 执行 RED：`flutter test test/integration/verify_live_photo_cli_test.dart -r expanded`，确认缺少 `live_photo_parser_registry.dart` 与 `verify_live_photo.dart`。  
+  3. 写最小实现：新增 `lib/data/services/live_photo_parser_registry.dart`，实现默认 parser 注册、递归扫描、匹配分发、失败收集。  
+  4. 新增 `bin/verify_live_photo.dart`，实现 `buildScanSummary` 与 CLI JSON 输出。  
+  5. 执行 GREEN：`flutter test test/integration/verify_live_photo_cli_test.dart -r expanded` 通过。  
+  6. 执行回归：`flutter test test/smoke test/domain test/application test/data/parsers test/integration/verify_live_photo_cli_test.dart -r compact` 全绿。  
+  7. 更新看板：`T2-6` 标记为 `待确认`。  
+- 验证证据（可复现）：  
+  1. RED 证据：`Error when reading 'lib/data/services/live_photo_parser_registry.dart'`。  
+  2. GREEN 证据：`test/integration/verify_live_photo_cli_test.dart` 输出 `00:04 +2: All tests passed!`。  
+  3. 回归证据：跨 `smoke + domain + application + data/parsers + integration` 输出 `All tests passed!`。  
+- 阻塞/风险：CLI 当前输出基础摘要字段，后续可在 `T3` 阶段扩展统计维度（失败类型聚类、品牌识别分布、耗时）。  
+- 下一步：等待你确认 `T2-6`；确认后将 `T2` 母任务推进至 `待确认` 并进入 `T3-1`。  
