@@ -1,0 +1,55 @@
+name: Windows Build
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/windows-build.yml"
+      - "bin/**"
+      - "lib/**"
+      - "pubspec.yaml"
+      - "pubspec.lock"
+      - "test/**"
+      - "tool/**"
+      - "windows/**"
+  workflow_dispatch:
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    timeout-minutes: 45
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: "3.41.1"
+          channel: stable
+          cache: true
+
+      - name: Flutter Version
+        run: flutter --version
+
+      - name: Install Dependencies
+        run: flutter pub get
+
+      - name: Run Smoke and Widget Tests
+        run: flutter test test/smoke test/widget_test.dart -r compact
+
+      - name: Run Core Tests
+        run: flutter test test/domain test/application test/data/parsers test/integration -r compact
+
+      - name: Build Windows Release
+        run: flutter build windows --release
+
+      - name: Upload Windows Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ulpv-windows-release-${{ github.sha }}
+          path: build/windows/x64/runner/Release
+          if-no-files-found: error
+          retention-days: 7

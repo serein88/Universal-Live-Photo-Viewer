@@ -184,6 +184,7 @@ class LivePhotoEntity {
 * 门禁与发布检查清单：`docs/testing/v1-gates.md`
 * 样本统计命令：`$env:USERPROFILE\flutter-sdk\bin\dart.bat run bin/evaluate_v1_samples.dart sample`
 * 失败报告命令：`$env:USERPROFILE\flutter-sdk\bin\dart.bat run bin/report_v1_failures.dart sample`
+* Windows 云端构建：GitHub Actions `Windows Build`（`.github/workflows/windows-build.yml`）
 
 ## 8. 附录：关键协议特征 (Protocol Reference)
 * **Xiaomi / Google (Motion Photo)**  

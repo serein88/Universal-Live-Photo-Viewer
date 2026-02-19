@@ -246,3 +246,20 @@
   1. 安装 Visual Studio（Desktop development with C++，默认组件）。  
   2. 重新执行 `flutter doctor -v` 直到 Windows toolchain 变为通过。  
   3. 重试 `flutter build windows --debug`，通过后将 `T4-1` 从 `失败` 改为 `完成` 并继续 `T4-2`。  
+
+### 2026-02-19 23:30:47 | T4-1 | 失败 -> 待确认
+- 本轮目标：切换到 GitHub Actions 执行 Windows 构建，绕过本地 VS 工具链阻塞，并补记遗漏进度。  
+- 实施内容：  
+  1. 将 `T4-1` 从 `失败` 重新领取为 `进行中`，改用云端构建验证。  
+  2. 新增工作流 `.github/workflows/windows-build.yml`：  
+     - 触发：`push(main, paths filter)` + `workflow_dispatch`。  
+     - 步骤：`flutter pub get` -> 测试（smoke/widget/core）-> `flutter build windows --release` -> 上传产物。  
+  3. 更新 `README.md`，增加 Windows 云端构建入口。  
+  4. 更新 `docs/testing/v1-gates.md`，补充 GitHub Actions 触发方式与产物位置。  
+  5. 补记遗漏：上轮仅更新 `TASK.md` 备注（VS 缺失组件）未写入 `PROGRESS.md`；本轮已统一记录。  
+- 验证证据（可复现）：  
+  1. `flutter test test/smoke/windows_runner_bootstrap_test.dart -r compact` 输出 `All tests passed!`。  
+  2. `powershell -ExecutionPolicy Bypass -File tool/test_matrix.ps1 -DryRun` 输出 `Gate Summary: passed=5 failed=0 total=5`。  
+  3. `.github/workflows/windows-build.yml` 关键步骤存在：`workflow_dispatch`、`flutter build windows --release`、`upload-artifact`。  
+- 阻塞/风险：当前会话无法直接触发并观察 GitHub Actions 远端首跑结果（未在本地安装 `gh`，且需推送后由 GitHub 执行）。  
+- 下一步：你推送当前改动并在 GitHub Actions 手动触发 `Windows Build`；若产物 `ulpv-windows-release-<sha>` 生成成功，`T4-1` 可改为 `完成` 并进入 `T4-2`。  
