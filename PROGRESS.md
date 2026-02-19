@@ -108,3 +108,20 @@
   3. 文件证据：`lib/domain/live_photo_type.dart`、`lib/domain/live_photo_entity.dart`、`lib/domain/live_photo_parser.dart` 存在。  
 - 阻塞/风险：使用 PowerShell `Set-Content` 更新 `TASK.md` 时出现文件锁，曾导致文件被截断；后续统一改用补丁方式更新看板。  
 - 下一步：等待你确认 `T2-2`；确认后进入 `T2-3`（Application Ports 与用例编排）。  
+
+### 2026-02-19 19:02:24 | T2-3 | 进行中 -> 待确认
+- 本轮目标：完成 Application Ports 与核心用例编排（插件隔离边界）。  
+- 实施内容：  
+  1. 更新看板状态：`T2-2` 设为 `完成`，`T2-3` 设为 `进行中`。  
+  2. 按 TDD 写 RED 测试：新增 `test/application/scan_live_photos_use_case_test.dart`、`test/application/export_live_photo_use_case_test.dart`。  
+  3. 执行 RED：`flutter test test/application -r expanded`，确认缺少 `lib/application/ports/*` 与 `lib/application/use_cases/*`。  
+  4. 写最小实现：新增 Ports（`file_system_port.dart`、`media_picker_port.dart`、`video_playback_port.dart`、`export_port.dart`）与 Use Cases（`scan_live_photos_use_case.dart`、`export_live_photo_use_case.dart`）。  
+  5. 执行 GREEN：`flutter test test/application -r expanded` 通过。  
+  6. 回归验证：`flutter test test/smoke test/domain test/application -r compact` 全部通过。  
+  7. 更新看板：`T2-3` 设为 `待确认`。  
+- 验证证据（可复现）：  
+  1. RED 证据：测试输出 `Error when reading 'lib/application/ports/export_port.dart'`。  
+  2. GREEN 证据：`test/application` 输出 `All tests passed!`。  
+  3. 回归证据：`test/smoke + test/domain + test/application` 输出 `All tests passed!`。  
+- 阻塞/风险：当前 `.gitignore` 包含 `test/` 与 `docs/`，会导致新增测试和文档默认不纳入版本管理；建议后续单开任务修正。  
+- 下一步：等待你确认 `T2-3`；确认后进入 `T2-4`（iOS Parser 骨架）。  
