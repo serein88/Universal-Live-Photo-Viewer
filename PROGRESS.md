@@ -125,3 +125,37 @@
   3. 回归证据：`test/smoke + test/domain + test/application` 输出 `All tests passed!`。  
 - 阻塞/风险：当前 `.gitignore` 包含 `test/` 与 `docs/`，会导致新增测试和文档默认不纳入版本管理；建议后续单开任务修正。  
 - 下一步：等待你确认 `T2-3`；确认后进入 `T2-4`（iOS Parser 骨架）。  
+
+### 2026-02-19 19:12:27 | T2-4 | 进行中 -> 待确认
+- 本轮目标：完成 iOS Parser 骨架，实现“UUID 优先、文件名兜底”匹配与统一错误码。  
+- 实施内容：  
+  1. 更新看板状态：`T2-3` 标记为 `完成`，`T2-4` 标记为 `进行中`。  
+  2. 按 TDD 写 RED 测试：新增 `test/data/parsers/ios_parser_test.dart`，覆盖 4 个场景（样本匹配、样本解析、无配对错误码、UUID 优先）。  
+  3. 执行 RED：`flutter test test/data/parsers/ios_parser_test.dart -r expanded`，确认缺少 parser 实现。  
+  4. 写最小实现：新增 `lib/data/parsers/parser_errors.dart`（统一错误码）与 `lib/data/parsers/ios_parser.dart`。  
+  5. 修复一次编译问题（`latin1.decode` 参数名），再次执行 GREEN。  
+  6. 执行回归：`flutter test test/smoke test/domain test/application test/data/parsers/ios_parser_test.dart -r compact` 全绿。  
+  7. 更新看板：`T2-4` 标记为 `待确认`。  
+- 验证证据（可复现）：  
+  1. RED 证据：`Error when reading 'lib/data/parsers/ios_parser.dart'`。  
+  2. GREEN 证据：`test/data/parsers/ios_parser_test.dart` 输出 `00:00 +4: All tests passed!`。  
+  3. 回归证据：`smoke + domain + application + ios_parser` 输出 `All tests passed!`。  
+- 阻塞/风险：当前 UUID 提取为“从文件文本中正则提取 UUID”的骨架实现，后续需要在真实厂商样本上增强鲁棒性（特别是二进制结构化元数据）。  
+- 下一步：等待你确认 `T2-4`；确认后进入 `T2-5`（Motion Photo Parser 骨架）。  
+
+### 2026-02-19 19:19:55 | T2-5 | 进行中 -> 待确认
+- 本轮目标：完成 Motion Photo Parser 骨架，支持从 XMP `MicroVideoOffset` 切片生成临时 MP4。  
+- 实施内容：  
+  1. 根据用户确认，将 `T2-3` 标记为 `完成`，`T2-4` 标记为 `完成`，并将 `T2-5` 标记为 `进行中`。  
+  2. 按 TDD 写 RED 测试：新增 `test/data/parsers/motion_photo_parser_test.dart`，覆盖 4 个场景（样本匹配、样本切片、普通图不匹配、缺失元数据报错）。  
+  3. 执行 RED：`flutter test test/data/parsers/motion_photo_parser_test.dart -r expanded`，确认缺少 parser 实现。  
+  4. 写最小实现：新增 `lib/data/parsers/motion_photo_parser.dart`；更新 `lib/data/parsers/parser_errors.dart` 增加 `metadataNotFound`。  
+  5. 执行 GREEN：`flutter test test/data/parsers/motion_photo_parser_test.dart -r expanded` 通过。  
+  6. 执行回归：`flutter test test/smoke test/domain test/application test/data/parsers -r compact` 全绿。  
+  7. 更新看板：`T2-5` 标记为 `待确认`。  
+- 验证证据（可复现）：  
+  1. RED 证据：`Error when reading 'lib/data/parsers/motion_photo_parser.dart'`。  
+  2. GREEN 证据：`test/data/parsers/motion_photo_parser_test.dart` 输出 `00:00 +4: All tests passed!`。  
+  3. 回归证据：`smoke + domain + application + data/parsers` 输出 `All tests passed!`。  
+- 阻塞/风险：当前切片逻辑按 `MicroVideoOffset`（文件末尾回推）实现，后续需补充更多非小米样本验证兼容性。  
+- 下一步：等待你确认 `T2-5`；确认后进入 `T2-6`（Parser Registry + CLI 验证入口）。  
