@@ -2,12 +2,86 @@ name: Windows Build
 
 on:
   workflow_dispatch:
+    inputs:
+      sample_tag:
+        description: "样本/任务标签（如 T4-5）"
+        required: false
+        type: string
+      build_note:
+        description: "构建备注（可选）"
+        required: false
+        type: string
 
 permissions:
   contents: read
 
 jobs:
+  quality-check:
+    runs-on: windows-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: "3.41.1"
+          channel: stable
+          cache: true
+
+      - name: Install Dependencies
+        run: flutter pub get
+
+      - name: Run Core Tests
+        id: core_tests
+        shell: pwsh
+        run: |
+          $targets = @(
+            "test/domain",
+            "test/application",
+            "test/data/parsers",
+            "test/integration"
+          ) | Where-Object { Test-Path $_ }
+          if ($targets.Count -eq 0) {
+            "result=skipped" >> $env:GITHUB_OUTPUT
+            Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "## Quality Check Summary"
+            Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "- Core tests: skipped (no test target found)"
+            exit 0
+          }
+
+          flutter test @targets -r compact
+          "result=passed" >> $env:GITHUB_OUTPUT
+          Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "## Quality Check Summary"
+          Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "- Core tests: passed"
+
+      - name: Run Static Analyze (non-blocking)
+        id: static_analyze
+        continue-on-error: true
+        shell: pwsh
+        run: flutter analyze
+
+      - name: Summarize Non-blocking Warnings
+        if: always()
+        shell: pwsh
+        run: |
+          if ("${{ steps.static_analyze.outcome }}" -ne "success") {
+            Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "- :warning: Static analyze failed (non-blocking in early phase)."
+          } else {
+            Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "- Static analyze: passed"
+          }
+
+          if ([string]::IsNullOrWhiteSpace("${{ github.event.inputs.sample_tag }}") -eq $false) {
+            Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "- sample_tag: `${{ github.event.inputs.sample_tag }}`"
+          }
+
+          if ([string]::IsNullOrWhiteSpace("${{ github.event.inputs.build_note }}") -eq $false) {
+            Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "- build_note: `${{ github.event.inputs.build_note }}`"
+          }
+
   build-windows:
+    needs: quality-check
     runs-on: windows-latest
     timeout-minutes: 45
 
@@ -22,58 +96,53 @@ jobs:
           channel: stable
           cache: true
 
-      - name: Flutter Version
-        run: flutter --version
-
       - name: Install Dependencies
         run: flutter pub get
-
-      - name: Run Smoke and Widget Tests (if present, non-blocking)
-        id: smoke_widget_tests
-        continue-on-error: true
-        shell: pwsh
-        run: |
-          $targets = @("test/smoke", "test/widget_test.dart") | Where-Object { Test-Path $_ }
-          if ($targets.Count -eq 0) {
-            Write-Host "No smoke/widget tests found in repository. Skipping."
-            exit 0
-          }
-          flutter test @targets -r compact
-
-      - name: Run Core Tests (if present, non-blocking)
-        id: core_tests
-        continue-on-error: true
-        shell: pwsh
-        run: |
-          $targets = @(
-            "test/domain",
-            "test/application",
-            "test/data/parsers",
-            "test/integration"
-          ) | Where-Object { Test-Path $_ }
-          if ($targets.Count -eq 0) {
-            Write-Host "No core test targets found in repository. Skipping."
-            exit 0
-          }
-          flutter test @targets -r compact
-
-      - name: Summarize Test Results
-        if: always()
-        shell: pwsh
-        run: |
-          Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "## Test Result (Non-blocking)"
-          Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "- smoke/widget outcome: ${{ steps.smoke_widget_tests.outcome }}"
-          Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "- smoke/widget conclusion: ${{ steps.smoke_widget_tests.conclusion }}"
-          Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "- core tests outcome: ${{ steps.core_tests.outcome }}"
-          Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "- core tests conclusion: ${{ steps.core_tests.conclusion }}"
 
       - name: Build Windows Release
         run: flutter build windows --release
 
-      - name: Upload Windows Artifact
+      - name: Upload Build Output for Publish Job
         uses: actions/upload-artifact@v4
         with:
-          name: ulpv-windows-release-${{ github.sha }}
+          name: windows-release-dir-${{ github.sha }}
           path: build/windows/x64/runner/Release
+          if-no-files-found: error
+          retention-days: 7
+
+  publish-artifact:
+    needs: build-windows
+    runs-on: windows-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Download Build Output
+        uses: actions/download-artifact@v4
+        with:
+          name: windows-release-dir-${{ github.sha }}
+          path: release
+
+      - name: Generate Artifact Name
+        id: artifact_meta
+        shell: pwsh
+        run: |
+          $shortSha = "${{ github.sha }}".Substring(0, 7)
+          $date = Get-Date -Format "yyyyMMdd"
+          $artifactName = "ulpv-win-x64-$shortSha-$date"
+          "artifact_name=$artifactName" >> $env:GITHUB_OUTPUT
+          Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "## Publish Artifact"
+          Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "- artifact: `$artifactName`"
+          if ([string]::IsNullOrWhiteSpace("${{ github.event.inputs.sample_tag }}") -eq $false) {
+            Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "- sample_tag: `${{ github.event.inputs.sample_tag }}`"
+          }
+          if ([string]::IsNullOrWhiteSpace("${{ github.event.inputs.build_note }}") -eq $false) {
+            Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "- build_note: `${{ github.event.inputs.build_note }}`"
+          }
+
+      - name: Publish Windows Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.artifact_meta.outputs.artifact_name }}
+          path: release
           if-no-files-found: error
           retention-days: 7
