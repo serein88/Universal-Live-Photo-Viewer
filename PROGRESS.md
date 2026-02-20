@@ -392,3 +392,18 @@
   2. 代码修复证据：`lib/main.dart:26` 已改为 `WindowsVideoPlayer.registerWith()`。  
 - 阻塞/风险：当前环境无 Flutter 命令，无法本地执行 `flutter build windows`，需以 GitHub Actions 结果为准。  
 - 下一步：推送后手动触发 `Windows Build`，若通过即继续下载 artifact 验证播放链路与交互稳定性。  
+
+### 2026-02-20 13:15:00 | T4-5 | 待确认 -> 进行中 -> 待确认（验证证据回填准备）
+- 本轮目标：按最新要求补齐 `T4-5` 的验证证据结构（Actions run 链接 / 产物运行结果 / 实机日志摘要），并明确当前会话的阻塞风险。  
+- 实施内容：  
+  1. 领取子任务：`T4-5` 作为本轮唯一处理项（不扩散到移动端与协议扩展）。  
+  2. 对照工作流与历史进展，整理证据模板：  
+     - Actions run 链接；  
+     - artifact 下载与解压后的运行现象；  
+     - 实机日志关键摘要（含错误/恢复行为）。  
+  3. 更新看板备注：`TASK.md` 的 `T4-5` 备注改为“本轮已领取并回写验证模板；受会话网络限制无法直连 GitHub，待你按记录链接重跑并回填本地运行日志”。  
+- 验证证据（可复现）：  
+  1. `curl -I -s https://github.com/serein88/Universal-Live-Photo-Viewer/actions` 返回 `HTTP/1.1 403 Forbidden`（当前会话无法访问 GitHub Actions 页面）。  
+  2. `curl -i -s https://api.github.com/repos/serein88/Universal-Live-Photo-Viewer/actions/workflows/windows-build.yml/runs?per_page=1 | head -n 40` 返回 `HTTP/1.1 403 Forbidden`。  
+- 阻塞/风险：当前环境对 GitHub 访问受限，无法在本会话内直接补录最新 Actions run 链接、下载 artifact 并执行本机运行验证。  
+- 下一步：请你在本地/可联网环境手动触发 `Windows Build`，将 run 链接、artifact 运行结果与日志摘要回传；我即可把 `T4-5` 从 `待确认` 推进到 `完成`。  
