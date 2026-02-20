@@ -295,3 +295,25 @@
   3. 变更证据：`git diff .github/workflows/windows-build.yml` 显示非阻断测试与汇总步骤。  
 - 阻塞/风险：测试失败时 workflow 将继续构建并可能显示成功，质量把关需要通过 summary 或后续人工审核补足。  
 - 下一步：你推送后重跑 `Windows Build`；确认测试失败不阻断且能产出 artifact，再决定是否把该策略长期保留。  
+
+### 2026-02-20 10:05:29 | T4-2/T4-3/T4-4 | 进行中 -> 完成
+- 本轮目标：在 Windows MVP 上连续完成目录扫描列表、双层播放器、桌面交互三项子任务，并减少用户参与。  
+- 实施内容：  
+  1. 看板流转：`T4-1` 标记为 `完成`，依次领取并完成 `T4-2`、`T4-3`、`T4-4`，母任务 `T4` 标记为 `完成`。  
+  2. 新增适配器：  
+     - `lib/data/adapters/local_file_system_port.dart`（递归列文件、删除文件）。  
+     - `lib/data/adapters/file_picker_media_picker_port.dart`（目录与文件选择）。  
+  3. 重构 `lib/main.dart`：  
+     - 实现“选择目录并扫描 + 刷新重扫 + 结果列表渲染”（T4-2）。  
+     - 实现“静图底层 + 视频上层 + 播放结束自动回退静图”（T4-3）。  
+     - 实现“键盘方向键切图 + 鼠标滚轮切图 + 焦点保持”（T4-4）。  
+  4. 新增播放抽象与实现：`lib/ui/playback/video_overlay_player.dart`（便于 UI 测试注入假播放器）。  
+  5. 更新 `test/widget_test.dart`：覆盖扫描展示、刷新重扫、播放回退、键盘与滚轮切图四个场景。  
+- 验证证据（可复现）：  
+  1. `flutter test test/widget_test.dart -r expanded`：`+4: All tests passed!`。  
+  2. `flutter test test/smoke -r compact`：`All tests passed!`。  
+  3. `flutter test test/smoke test/widget_test.dart -r compact`：`All tests passed!`。  
+- 阻塞/风险：  
+  1. iOS `.MOV` 在 Windows 端的底层编解码可用性受系统能力影响，若无法解码会触发“播放失败”提示。  
+  2. 当前仅完成 Windows MVP 交互闭环，未进入 Android/iOS 权限与导入流程。  
+- 下一步：进入 `T5-1`（Android 权限流），实现侧载场景的授权与拒绝兜底。  
