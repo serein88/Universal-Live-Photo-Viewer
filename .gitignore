@@ -1,4 +1,10 @@
 tmp/
+build/
+.dart_tool/
+.idea/
+*.iml
+.flutter-plugins
+.flutter-plugins-dependencies
 *.log
 *.tmp
 sample/

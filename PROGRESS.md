@@ -344,3 +344,22 @@
   2. Job 通过：`Run Smoke and Widget Tests`、`Run Core Tests`、`Build Windows Release`、`Upload Windows Artifact`。  
 - 阻塞/风险：本地仍无法直接打包，后续若需离线构建仍需补齐 VS 工具链组件。  
 - 下一步：下载本次 artifact（`ulpv-windows-release-<sha>`）进行 UI 验收与样本扫描回归。  
+
+### 2026-02-20 10:46:37 | T10 | 进行中 -> 完成
+- 本轮目标：清理不应推送到远端的本地文件，并将 Windows Build 改为仅手动触发。  
+- 实施内容：  
+  1. 更新 `.gitignore`，新增忽略：`build/`、`.dart_tool/`、`.idea/`、`*.iml`、`.flutter-plugins`、`.flutter-plugins-dependencies`。  
+  2. 更新 `.github/workflows/windows-build.yml`：删除 `push` 触发，仅保留 `workflow_dispatch`。  
+  3. 从 Git 索引移除已被跟踪的本地/构建文件（保留本地文件）：  
+     - `.dart_tool/**`  
+     - `build/**`  
+     - `.idea/**`  
+     - `*.iml`（含 `universal_live_photo_viewer.iml` 与 `android/*.iml`）  
+     - `.flutter-plugins-dependencies`  
+  4. 按用户要求，本轮未执行任何 `git push`。  
+- 验证证据（可复现）：  
+  1. `git check-ignore -v` 显示上述路径均命中新增忽略规则。  
+  2. `rg \"^on:|workflow_dispatch|push:\" .github/workflows/windows-build.yml` 仅保留 `workflow_dispatch`。  
+  3. `git status --short` 显示相关文件为 `D`（从索引移除）与配置文件修改，符合“远端删除、本地保留”。  
+- 阻塞/风险：无功能代码风险；若后续需要在仓库保留 IDE 配置，需要单独白名单特定文件。  
+- 下一步：由你执行 `git push`；随后在 GitHub Actions 页面手动触发 `Windows Build` 并下载 artifact 本地测试。  

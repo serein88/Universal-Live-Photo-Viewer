@@ -1,18 +1,6 @@
 name: Windows Build
 
 on:
-  push:
-    branches:
-      - main
-    paths:
-      - ".github/workflows/windows-build.yml"
-      - "bin/**"
-      - "lib/**"
-      - "pubspec.yaml"
-      - "pubspec.lock"
-      - "test/**"
-      - "tool/**"
-      - "windows/**"
   workflow_dispatch:
 
 jobs:
