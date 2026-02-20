@@ -317,3 +317,18 @@
   1. iOS `.MOV` 在 Windows 端的底层编解码可用性受系统能力影响，若无法解码会触发“播放失败”提示。  
   2. 当前仅完成 Windows MVP 交互闭环，未进入 Android/iOS 权限与导入流程。  
 - 下一步：进入 `T5-1`（Android 权限流），实现侧载场景的授权与拒绝兜底。  
+
+### 2026-02-20 10:35:51 | T4-1 | 进行中 -> 进行中（云端构建复测修复）
+- 本轮目标：修复 GitHub Actions `flutter build windows --release` 编译阻塞并重新触发基础包构建。  
+- 实施内容：  
+  1. 基于失败日志定位到 `lib/data/parsers/ios_parser.dart` 与 `lib/data/parsers/motion_photo_parser.dart` 的 `File` 类型解析异常。  
+  2. 对解析器与接口文件做显式 IO 导入，避免云端编译器解析歧义：  
+     - `lib/data/parsers/ios_parser.dart`  
+     - `lib/data/parsers/motion_photo_parser.dart`  
+     - `lib/domain/live_photo_parser.dart`  
+  3. 更新看板：`T4-1` 置为 `进行中`，备注“云端构建复测中”。  
+- 验证证据（可复现）：  
+  1. `flutter test test/data/parsers -r compact`：`All tests passed!`。  
+  2. `flutter test test/smoke test/widget_test.dart -r compact`：`All tests passed!`。  
+- 阻塞/风险：本地仍因 VS 工具链缺失无法直接执行 `flutter build windows --release`，需通过 GitHub Actions 验证最终产物。  
+- 下一步：提交并推送修复，观察 `Windows Build` 运行结果；成功后将 `T4-1` 标记为 `完成` 并给出基础包下载路径。  

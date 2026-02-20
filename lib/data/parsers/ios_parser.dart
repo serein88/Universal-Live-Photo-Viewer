@@ -1,5 +1,5 @@
 import 'dart:convert';
-import 'dart:io';
+import 'dart:io' show File;
 
 import 'package:universal_live_photo_viewer/data/parsers/parser_errors.dart';
 import 'package:universal_live_photo_viewer/domain/live_photo_entity.dart';

@@ -1,4 +1,4 @@
-import 'dart:io';
+import 'dart:io' show File;
 
 import 'package:universal_live_photo_viewer/domain/live_photo_entity.dart';
 
