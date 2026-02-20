@@ -459,13 +459,54 @@ class _WindowsDirectoryScanPageState extends State<WindowsDirectoryScanPage> {
           Positioned(
             right: 12,
             bottom: 12,
-            child: FilledButton.icon(
-              key: const Key('play_selected_button'),
-              onPressed: selectedEntity.videoPath == null || _isScanning
-                  ? null
-                  : _playSelected,
-              icon: const Icon(Icons.play_arrow),
-              label: Text(_showVideoOverlay ? '播放中' : '播放实况'),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: <Widget>[
+                IconButton.filledTonal(
+                  key: const Key('previous_item_button'),
+                  onPressed: _isScanning || (_selectedIndex ?? 0) <= 0
+                      ? null
+                      : () => _selectByStep(-1),
+                  icon: const Icon(Icons.chevron_left),
+                  tooltip: '上一张',
+                ),
+                const SizedBox(width: 8),
+                DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: Colors.black54,
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 8,
+                    ),
+                    child: Text(
+                      '${(_selectedIndex ?? 0) + 1}/${_entities.length}',
+                      key: const Key('preview_index_text'),
+                      style: const TextStyle(color: Colors.white),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                IconButton.filledTonal(
+                  key: const Key('next_item_button'),
+                  onPressed: _isScanning || (_selectedIndex ?? 0) >= _entities.length - 1
+                      ? null
+                      : () => _selectByStep(1),
+                  icon: const Icon(Icons.chevron_right),
+                  tooltip: '下一张',
+                ),
+                const SizedBox(width: 8),
+                FilledButton.icon(
+                  key: const Key('play_selected_button'),
+                  onPressed: selectedEntity.videoPath == null || _isScanning
+                      ? null
+                      : _playSelected,
+                  icon: const Icon(Icons.play_arrow),
+                  label: Text(_showVideoOverlay ? '播放中' : '播放实况'),
+                ),
+              ],
             ),
           ),
         ],

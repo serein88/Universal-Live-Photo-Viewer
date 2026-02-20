@@ -405,3 +405,35 @@
   2. `python -m json.tool` 对示例 JSON 字段进行语法校验（通过）。  
 - 阻塞/风险：当前环境非 Windows，且无 GUI 应用上下文，无法实际完成“导入/切图/播放/导出”交互验收；需你在 Windows 本地运行脚本并回传日志与截图。  
 - 下一步：在 Windows 执行 `tool/windows_smoke_check.ps1`，上传 `logs/windows_smoke_*.log` 与导出/界面证据，确认后可将 `T4-6` 置为 `完成`。  
+
+
+### 2026-02-20 06:19:37 | T4-7 | 进行中 -> 待确认
+- 本轮目标：补齐 Windows 预览区鼠标可点击翻页控件与序号提示，降低仅依赖键盘/滚轮操作的门槛。  
+- 实施内容：  
+  1. 更新 `lib/main.dart` 预览区底部操作区：新增 `previous_item_button` / `next_item_button` 两个按钮，并复用现有 `_selectByStep` 切换逻辑。  
+  2. 新增 `preview_index_text`，显示当前项序号与总数（如 `1/2`），便于实机验收时快速确认当前选中状态。  
+  3. 保留原有 `play_selected_button` 与键盘/滚轮事件链路，确保当前播放与桌面交互能力不回归。  
+  4. 更新 `test/widget_test.dart`：在“keyboard and wheel can switch selected item”场景补充按钮切换与序号显示断言。  
+  5. 更新 `TASK.md`：新增子任务 `T4-7` 并置为 `待确认`，等待你触发 Windows Actions 并在本地实机回归。  
+- 验证证据（可复现）：  
+  1. `which flutter || true; flutter --version`（当前环境无 Flutter，命令不可用）。  
+  2. `which dart || true; dart --version`（当前环境无 Dart，命令不可用）。  
+  3. `rg -n "previous_item_button|next_item_button|preview_index_text" lib/main.dart test/widget_test.dart`（确认新增 UI 控件 key 与测试断言均已入库）。  
+- 阻塞/风险：当前容器无 Flutter/Dart 运行时，无法执行 `flutter test` 与 `flutter build windows`；需你在 GitHub Actions 触发 Windows Build 并下载产物进行本地操作回归。  
+- 下一步：你触发 `Windows Build` 后，在本地按 `docs/testing/windows-local-smoke.md` 跑一轮，重点验证“按钮翻页 + 键盘/滚轮翻页 + 播放按钮”三者可同时工作，并回传日志。  
+
+
+### 2026-02-20 06:29:17 | T4-7 | 进行中 -> 失败
+- 本轮目标：按你的要求在云端安装 Flutter/Dart 并先行跑一轮代码检查，再由你手动触发 GitHub Actions Windows Build。  
+- 实施内容：  
+  1. 环境探测：确认当前容器为 Linux root 环境，`flutter`/`dart` 初始均不存在。  
+  2. 方案 A（GitHub 源安装）尝试：`git clone https://github.com/flutter/flutter.git -b stable --depth 1 /opt/flutter`，被网络出口策略阻断。  
+  3. 方案 B（Google Storage）探测：`curl -I https://storage.googleapis.com/flutter_infra_release/releases/releases_linux.json`，同样返回 `CONNECT tunnel failed, response 403`。  
+  4. 本地兜底探测：`find / -maxdepth 4 -type f -name flutter` 与 `find / -maxdepth 4 -type d -name '*flutter*'`，仅发现仓库 `windows/flutter` 目录，不含可执行 SDK。  
+  5. 更新 `TASK.md`：`T4-7` 状态改为 `失败`，备注本轮阻塞与下一步建议。  
+- 验证证据（可复现）：  
+  1. `git clone ...` 输出：`fatal: unable to access ... CONNECT tunnel failed, response 403`。  
+  2. `curl -I ...releases_linux.json` 输出：`HTTP/1.1 403 Forbidden`。  
+  3. `which flutter || true; which dart || true`：无路径输出。  
+- 阻塞/风险：当前云端容器网络策略禁止访问 Flutter/Dart 官方分发源，导致无法在本容器内完成 SDK 安装与本地执行 `flutter test`。  
+- 下一步建议：直接使用你仓库已有的 GitHub Actions Windows 环境（workflow 已内置 `subosito/flutter-action@v2` 安装 Flutter）执行 `quality-check + build-windows`，你下载 artifact 后按 `docs/testing/windows-local-smoke.md` 本地验收并回传日志。  
