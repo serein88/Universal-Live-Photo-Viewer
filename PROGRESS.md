@@ -393,21 +393,15 @@
 - 阻塞/风险：当前环境无 Flutter 命令，无法本地执行 `flutter build windows`，需以 GitHub Actions 结果为准。  
 - 下一步：推送后手动触发 `Windows Build`，若通过即继续下载 artifact 验证播放链路与交互稳定性。  
 
-### 2026-02-20 12:05:00 | T4-5 | 待确认 -> 待确认（Windows Build workflow 拆分与发布规范化）
-- 本轮目标：按回归验证需求重构 Windows Build workflow（质量门、构建、发布分离），并补齐手动触发说明。  
+### 2026-02-20 12:05:00 | T4-6 | 进行中 -> 待确认
+- 本轮目标：新增 Windows 本地冒烟标准化脚本，固化最小验证路径与结构化日志字段，便于后续自动比对。  
 - 实施内容：  
-  1. 更新 `.github/workflows/windows-build.yml`：拆分为 `quality-check`、`build-windows`、`publish-artifact` 三个 job。  
-  2. `quality-check` 中将核心测试改为阻断门禁，并输出 `GITHUB_STEP_SUMMARY`；静态检查改为 early phase `continue-on-error` 非阻断。  
-  3. 对 non-blocking 失败增加显式 `:warning:` 摘要，确保失败信息在 Summary 可见。  
-  4. `build-windows` 增加 `needs: quality-check` 依赖，仅在质量检查完成后执行构建。  
-  5. `publish-artifact` 新增产物发布流程，统一命名为 `ulpv-win-x64-{short_sha}-{date}`。  
-  6. `workflow_dispatch` 增加输入参数 `sample_tag` 与 `build_note`，并在 summary 中透传，便于任务编号关联。  
-  7. 更新 `README.md` 第 7 节，新增“如何手动触发 Windows 构建并下载产物”步骤说明。  
-  8. 更新 `TASK.md` 的 `T4-5` 备注，记录当前 workflow 重构范围与待回归状态。  
+  1. 新增 `tool/windows_smoke_check.ps1`：固定执行“启动应用 -> 导入样本目录 -> 切图 -> 播放 -> 导出 -> 退出应用”六步。  
+  2. 脚本日志固定写入 `logs/windows_smoke_yyyyMMdd_HHmmss.log`，并记录 `app_version`、`commit_hash`、`sample_path`、`step`、`result`、`started_at`、`ended_at`、`duration_ms`、`error_code`、`error_stack`、`message`。  
+  3. 新增 `docs/testing/windows-local-smoke.md`，明确本地运行命令、固定步骤、日志字段、以及执行后需上传的文件。  
+  4. 更新 `TASK.md`：新增子任务 `T4-6`（Windows 本地冒烟标准化脚本）并置为 `待确认`。  
 - 验证证据（可复现）：  
-  1. `cat .github/workflows/windows-build.yml` 可见三段 job 定义与依赖关系（`build-windows` 依赖 `quality-check`，`publish-artifact` 依赖 `build-windows`）。  
-  2. `cat .github/workflows/windows-build.yml` 可见 `workflow_dispatch.inputs.sample_tag/build_note`。  
-  3. `cat .github/workflows/windows-build.yml` 可见 `:warning:` summary 输出和 artifact 命名逻辑 `ulpv-win-x64-$shortSha-$date`。  
-  4. `cat README.md` 可见新增“7.1 如何手动触发 Windows 构建并下载产物”章节。  
-- 阻塞/风险：当前为 workflow 与文档改动，尚未在 GitHub Actions 实际 run 上完成端到端回归；需你触发一次 `workflow_dispatch` 验证产物下载与命名。  
-- 下一步：使用 `sample_tag=T4-5` 手动触发 workflow，核对三个 job、summary 告警与 artifact 命名是否符合预期。  
+  1. `powershell -NoProfile -Command "Get-Help ./tool/windows_smoke_check.ps1"`（当前 Linux 环境无 PowerShell，无法直接执行，需在 Windows 本地复测）。  
+  2. `python -m json.tool` 对示例 JSON 字段进行语法校验（通过）。  
+- 阻塞/风险：当前环境非 Windows，且无 GUI 应用上下文，无法实际完成“导入/切图/播放/导出”交互验收；需你在 Windows 本地运行脚本并回传日志与截图。  
+- 下一步：在 Windows 执行 `tool/windows_smoke_check.ps1`，上传 `logs/windows_smoke_*.log` 与导出/界面证据，确认后可将 `T4-6` 置为 `完成`。  
