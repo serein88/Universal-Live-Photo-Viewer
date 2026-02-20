@@ -392,3 +392,16 @@
   2. 代码修复证据：`lib/main.dart:26` 已改为 `WindowsVideoPlayer.registerWith()`。  
 - 阻塞/风险：当前环境无 Flutter 命令，无法本地执行 `flutter build windows`，需以 GitHub Actions 结果为准。  
 - 下一步：推送后手动触发 `Windows Build`，若通过即继续下载 artifact 验证播放链路与交互稳定性。  
+
+### 2026-02-20 12:05:00 | T4-6 | 进行中 -> 待确认
+- 本轮目标：新增 Windows 本地冒烟标准化脚本，固化最小验证路径与结构化日志字段，便于后续自动比对。  
+- 实施内容：  
+  1. 新增 `tool/windows_smoke_check.ps1`：固定执行“启动应用 -> 导入样本目录 -> 切图 -> 播放 -> 导出 -> 退出应用”六步。  
+  2. 脚本日志固定写入 `logs/windows_smoke_yyyyMMdd_HHmmss.log`，并记录 `app_version`、`commit_hash`、`sample_path`、`step`、`result`、`started_at`、`ended_at`、`duration_ms`、`error_code`、`error_stack`、`message`。  
+  3. 新增 `docs/testing/windows-local-smoke.md`，明确本地运行命令、固定步骤、日志字段、以及执行后需上传的文件。  
+  4. 更新 `TASK.md`：新增子任务 `T4-6`（Windows 本地冒烟标准化脚本）并置为 `待确认`。  
+- 验证证据（可复现）：  
+  1. `powershell -NoProfile -Command "Get-Help ./tool/windows_smoke_check.ps1"`（当前 Linux 环境无 PowerShell，无法直接执行，需在 Windows 本地复测）。  
+  2. `python -m json.tool` 对示例 JSON 字段进行语法校验（通过）。  
+- 阻塞/风险：当前环境非 Windows，且无 GUI 应用上下文，无法实际完成“导入/切图/播放/导出”交互验收；需你在 Windows 本地运行脚本并回传日志与截图。  
+- 下一步：在 Windows 执行 `tool/windows_smoke_check.ps1`，上传 `logs/windows_smoke_*.log` 与导出/界面证据，确认后可将 `T4-6` 置为 `完成`。  
