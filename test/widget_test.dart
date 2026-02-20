@@ -223,10 +223,22 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('当前: iphone-13p-live-1.JPG'), findsOneWidget);
+    expect(find.byKey(const Key('preview_index_text')), findsOneWidget);
+    expect(find.text('1/2'), findsOneWidget);
 
     await tester.sendKeyDownEvent(LogicalKeyboardKey.arrowRight);
     await tester.pumpAndSettle();
 
+    expect(find.text('当前: xiaomi-live-1.jpg'), findsOneWidget);
+    expect(find.text('2/2'), findsOneWidget);
+
+    await tester.tap(find.byKey(const Key('previous_item_button')));
+    await tester.pumpAndSettle();
+    expect(find.text('当前: iphone-13p-live-1.JPG'), findsOneWidget);
+    expect(find.text('1/2'), findsOneWidget);
+
+    await tester.tap(find.byKey(const Key('next_item_button')));
+    await tester.pumpAndSettle();
     expect(find.text('当前: xiaomi-live-1.jpg'), findsOneWidget);
 
     final center = tester.getCenter(
