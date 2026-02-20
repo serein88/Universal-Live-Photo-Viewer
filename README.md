@@ -186,6 +186,21 @@ class LivePhotoEntity {
 * 失败报告命令：`$env:USERPROFILE\flutter-sdk\bin\dart.bat run bin/report_v1_failures.dart sample`
 * Windows 云端构建：GitHub Actions `Windows Build`（`.github/workflows/windows-build.yml`）
 
+### 7.1 如何手动触发 Windows 构建并下载产物
+1. 打开 GitHub 仓库页面 → `Actions` → 选择 `Windows Build` workflow。
+2. 点击 `Run workflow`，按需填写输入参数：
+   - `sample_tag`：关联样本/任务编号（如 `T4-5`）。
+   - `build_note`：补充本次构建说明（可选）。
+3. 等待三个 Job 顺序完成：
+   - `quality-check`：核心测试 + 静态检查摘要（静态检查为 early phase non-blocking，失败会写入 `GITHUB_STEP_SUMMARY` 并标注 :warning:）。
+   - `build-windows`：仅在 `quality-check` 完成后执行 Windows Release 构建。
+   - `publish-artifact`：生成并发布规范命名产物。
+4. 在本次 run 的 `Artifacts` 区域下载产物，命名规则为：`ulpv-win-x64-{short_sha}-{date}`。
+5. 对照 run 的 `Summary` 页面核验：
+   - 是否存在 :warning:（表示 non-blocking 项失败）。
+   - `sample_tag` / `build_note` 是否与本次任务一致。
+   - 产物名中的 `short_sha` 与 run commit 是否对应。
+
 ## 8. 附录：关键协议特征 (Protocol Reference)
 * **Xiaomi / Google (Motion Photo)**  
   - 关键标识：XMP 中 `MicroVideo` / `GCamera:MicroVideo`。  
