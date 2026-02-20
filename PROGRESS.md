@@ -380,3 +380,15 @@
   4. 环境阻塞证据：本机执行 `flutter test test/widget_test.dart -r compact` 返回 `flutter : The term 'flutter' is not recognized...`。  
 - 阻塞/风险：当前环境无 Flutter/Dart 命令，无法本地执行自动化测试与 Windows 打包验证。  
 - 下一步：你推送后手动触发 GitHub Actions `Windows Build`，下载新 artifact 复测“选择 sample 目录 -> 播放实况 -> 切图/重扫仍可操作”；通过后再进行统一验收。  
+
+### 2026-02-20 11:32:02 | T4-5 | 待确认 -> 待确认（CI 编译修复）
+- 本轮目标：修复 GitHub Actions Windows 构建报错 `Undefined name 'VideoPlayerWin'`。  
+- 实施内容：  
+  1. 复核 `video_player_win` 插件导出 API，确认注册类名应为 `WindowsVideoPlayer`。  
+  2. 最小改动修复：`lib/main.dart` 将 `VideoPlayerWin.registerWith()` 改为 `WindowsVideoPlayer.registerWith()`。  
+  3. 更新看板备注：`TASK.md` 的 `T4-5` 标记为“已修复注册名编译错误与播放异常，待重跑 Actions”。  
+- 验证证据（可复现）：  
+  1. CI 失败证据：`lib/main.dart(26,5): error ... Undefined name 'VideoPlayerWin'`。  
+  2. 代码修复证据：`lib/main.dart:26` 已改为 `WindowsVideoPlayer.registerWith()`。  
+- 阻塞/风险：当前环境无 Flutter 命令，无法本地执行 `flutter build windows`，需以 GitHub Actions 结果为准。  
+- 下一步：推送后手动触发 `Windows Build`，若通过即继续下载 artifact 验证播放链路与交互稳定性。  

@@ -23,7 +23,7 @@ typedef VideoOverlayPlayerBuilder = VideoOverlayPlayer Function();
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
   if (!kIsWeb && Platform.isWindows) {
-    VideoPlayerWin.registerWith();
+    WindowsVideoPlayer.registerWith();
   }
   runApp(const ULPVApp());
 }
