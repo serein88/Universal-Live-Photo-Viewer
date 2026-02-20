@@ -332,3 +332,15 @@
   2. `flutter test test/smoke test/widget_test.dart -r compact`：`All tests passed!`。  
 - 阻塞/风险：本地仍因 VS 工具链缺失无法直接执行 `flutter build windows --release`，需通过 GitHub Actions 验证最终产物。  
 - 下一步：提交并推送修复，观察 `Windows Build` 运行结果；成功后将 `T4-1` 标记为 `完成` 并给出基础包下载路径。  
+
+### 2026-02-20 10:38:11 | T4-1 | 进行中 -> 完成
+- 本轮目标：确认云端 Windows 基础包构建成功并可用于展示。  
+- 实施内容：  
+  1. 推送修复提交 `e6cf23c` 到 `main`，触发 `Windows Build`。  
+  2. 跟踪 GitHub Actions 运行：`T4-1: fix windows release compile imports for cloud build #3`。  
+  3. 运行结果由 `in_progress` 变为 `completed` 且结论 `success`。  
+- 验证证据（可复现）：  
+  1. Workflow run：`https://github.com/serein88/Universal-Live-Photo-Viewer/actions/runs/22228674879`。  
+  2. Job 通过：`Run Smoke and Widget Tests`、`Run Core Tests`、`Build Windows Release`、`Upload Windows Artifact`。  
+- 阻塞/风险：本地仍无法直接打包，后续若需离线构建仍需补齐 VS 工具链组件。  
+- 下一步：下载本次 artifact（`ulpv-windows-release-<sha>`）进行 UI 验收与样本扫描回归。  
