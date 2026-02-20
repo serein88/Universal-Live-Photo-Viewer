@@ -1,0 +1,36 @@
+name: Release Governance
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+  actions: write
+
+jobs:
+  release-preflight:
+    name: Release Preflight (Protected Environment)
+    runs-on: ubuntu-latest
+    environment:
+      name: production-release
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Verify release secret isolation
+        shell: bash
+        env:
+          RELEASE_SIGNING_KEY: ${{ secrets.RELEASE_SIGNING_KEY }}
+          RELEASE_STORE_PASSWORD: ${{ secrets.RELEASE_STORE_PASSWORD }}
+        run: |
+          if [[ -z "$RELEASE_SIGNING_KEY" || -z "$RELEASE_STORE_PASSWORD" ]]; then
+            echo "Missing release secrets in protected environment: production-release"
+            exit 1
+          fi
+          echo "Release secrets are available only after environment approval."
+
+      - name: Placeholder release step
+        run: |
+          echo "Run notarization/signing/publish steps here."
+          echo "Keep CI-only secrets out of this workflow."
