@@ -392,3 +392,19 @@
   2. 代码修复证据：`lib/main.dart:26` 已改为 `WindowsVideoPlayer.registerWith()`。  
 - 阻塞/风险：当前环境无 Flutter 命令，无法本地执行 `flutter build windows`，需以 GitHub Actions 结果为准。  
 - 下一步：推送后手动触发 `Windows Build`，若通过即继续下载 artifact 验证播放链路与交互稳定性。  
+
+### 2026-02-20 任务记录 | T11 | 进行中 -> 待确认
+- 本轮目标：按 6 条要求补齐仓库安全基线（机器人权限、分支与环境保护、secrets 分层、操作手册）。  
+- 实施内容：  
+  1. 新增 `.github/workflows/release-governance.yml`：仅 `workflow_dispatch` 触发，显式权限设为 `contents:write`、`pull-requests:write`、`actions:write`。  
+  2. 在 `release-governance.yml` 中将发布预检作业绑定 `production-release` 环境，作为发布 secrets 的受保护入口。  
+  3. 发布预检作业增加 `RELEASE_SIGNING_KEY` 与 `RELEASE_STORE_PASSWORD` 存在性校验，确保发布密钥与普通 CI secrets 分离。  
+  4. 更新 `.github/workflows/windows-build.yml`：显式最小化 `GITHUB_TOKEN` 权限为 `contents:read`，避免构建流程获取多余写权限。  
+  5. 在 `docs/security-operations-manual.md` 新增“安全操作手册”，覆盖：令牌轮换周期、泄漏应急流程、权限审计责任人，以及分支保护/环境保护配置要求。  
+  6. 更新 `TASK.md`：新增并推进 `T11` 到 `待确认`。  
+- 验证证据（可复现）：  
+  1. `rg -n "permissions|environment|RELEASE_SIGNING_KEY|RELEASE_STORE_PASSWORD" .github/workflows/release-governance.yml .github/workflows/windows-build.yml` 可看到权限、环境与发布 secrets 校验配置。  
+  2. `rg -n "轮换周期|泄漏应急|权限审计责任|main|Pull Request|production-release" docs/security-operations-manual.md` 可看到手册核心章节。  
+  3. `rg -n "T11" TASK.md` 可看到任务状态已变更为 `待确认`。  
+- 阻塞/风险：分支保护规则、Environment 审批人和 secrets 真正生效仍需在 GitHub 仓库 Settings 中完成一次性配置。  
+- 下一步：由仓库管理员在 GitHub 后台落地设置（Branch protection + Environment protection + Secrets 分层），然后触发 `Release Governance` 工作流做一次审批演练。  
