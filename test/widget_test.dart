@@ -49,6 +49,31 @@ class FakeVideoOverlayPlayer implements VideoOverlayPlayer {
   }
 }
 
+class ThrowingStopVideoOverlayPlayer implements VideoOverlayPlayer {
+  final ValueNotifier<bool> _isPlaying = ValueNotifier<bool>(false);
+
+  @override
+  ValueListenable<bool> get isPlayingListenable => _isPlaying;
+
+  @override
+  Future<void> start(String videoPath) async {
+    _isPlaying.value = true;
+  }
+
+  @override
+  Future<void> stop() {
+    throw UnimplementedError('initO has not been implemented.');
+  }
+
+  @override
+  Widget buildVideoLayer() => const SizedBox.shrink();
+
+  @override
+  Future<void> dispose() async {
+    _isPlaying.dispose();
+  }
+}
+
 void main() {
   testWidgets('scan flow renders recognized list after selecting directory', (
     WidgetTester tester,
@@ -214,4 +239,49 @@ void main() {
 
     expect(find.text('当前: iphone-13p-live-1.JPG'), findsOneWidget);
   });
+
+  testWidgets(
+    'selection remains operable when playback stop throws platform error',
+    (WidgetTester tester) async {
+      Future<String?> pickDirectory() async {
+        return 'sample';
+      }
+
+      Future<List<LivePhotoEntity>> scanDirectory(String rootPath) async {
+        return const <LivePhotoEntity>[
+          LivePhotoEntity(
+            id: 'item_01',
+            imagePath: 'sample/iphone-13p-live-1.JPG',
+            videoPath: 'sample/iphone-13p-live-1.MOV',
+            type: LivePhotoType.ios,
+          ),
+          LivePhotoEntity(
+            id: 'item_02',
+            imagePath: 'sample/xiaomi-live-1.jpg',
+            videoPath: 'tmp/xiaomi-live-1.mp4',
+            type: LivePhotoType.motionPhoto,
+          ),
+        ];
+      }
+
+      await tester.pumpWidget(
+        ULPVApp(
+          directoryPicker: pickDirectory,
+          directoryScanner: scanDirectory,
+          videoOverlayPlayer: ThrowingStopVideoOverlayPlayer(),
+        ),
+      );
+
+      await tester.tap(find.byKey(const Key('pick_directory_button')));
+      await tester.pumpAndSettle();
+
+      expect(find.text('当前: iphone-13p-live-1.JPG'), findsOneWidget);
+
+      await tester.sendKeyDownEvent(LogicalKeyboardKey.arrowRight);
+      await tester.pumpAndSettle();
+
+      expect(tester.takeException(), isNull);
+      expect(find.text('当前: xiaomi-live-1.jpg'), findsOneWidget);
+    },
+  );
 }

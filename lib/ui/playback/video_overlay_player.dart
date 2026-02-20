@@ -31,42 +31,61 @@ class VideoPlayerOverlayPlayer implements VideoOverlayPlayer {
 
     final controller = VideoPlayerController.file(File(videoPath));
     _controller = controller;
-    await controller.initialize();
-    controller.addListener(_onControllerTick);
-    await controller.play();
-    _isPlaying.value = true;
+    try {
+      await controller.initialize();
+      controller.addListener(_onControllerTick);
+      await controller.play();
+      _isPlaying.value = true;
+    } catch (_) {
+      await _safelyDisposeController(controller);
+      _controller = null;
+      _isPlaying.value = false;
+      rethrow;
+    }
   }
 
   @override
   Future<void> stop() async {
     final controller = _controller;
-    if (controller != null) {
-      controller.removeListener(_onControllerTick);
-      await controller.pause();
-      await controller.dispose();
-    }
-
     _controller = null;
     _isPlaying.value = false;
-  }
 
-  void _onControllerTick() {
-    final controller = _controller;
     if (controller == null) {
       return;
     }
 
-    final value = controller.value;
-    if (value.hasError) {
-      _isPlaying.value = false;
-      return;
-    }
+    await _safelyDisposeController(controller);
+  }
 
-    if (value.isInitialized &&
-        !value.isPlaying &&
-        value.duration > Duration.zero &&
-        value.position >= value.duration) {
-      _isPlaying.value = false;
+  Future<void> _safelyDisposeController(VideoPlayerController controller) async {
+    controller.removeListener(_onControllerTick);
+    try {
+      await controller.pause();
+    } catch (_) {
+      // Keep UI responsive even when the platform player is unavailable.
+    }
+    try {
+      await controller.dispose();
+    } catch (_) {
+      // Dispose errors should not block subsequent interactions.
+    }
+  }
+
+  void _onControllerTick() {
+    final controller = _controller;
+    if (controller != null) {
+      final value = controller.value;
+      if (value.hasError) {
+        _isPlaying.value = false;
+        return;
+      }
+
+      if (value.isInitialized &&
+          !value.isPlaying &&
+          value.duration > Duration.zero &&
+          value.position >= value.duration) {
+        _isPlaying.value = false;
+      }
     }
   }
 

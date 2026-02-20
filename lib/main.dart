@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -12,6 +13,7 @@ import 'package:universal_live_photo_viewer/data/parsers/motion_photo_parser.dar
 import 'package:universal_live_photo_viewer/domain/live_photo_entity.dart';
 import 'package:universal_live_photo_viewer/domain/live_photo_parser.dart';
 import 'package:universal_live_photo_viewer/ui/playback/video_overlay_player.dart';
+import 'package:video_player_win/video_player_win.dart';
 
 typedef DirectoryPicker = Future<String?> Function();
 typedef DirectoryScanner =
@@ -19,6 +21,10 @@ typedef DirectoryScanner =
 typedef VideoOverlayPlayerBuilder = VideoOverlayPlayer Function();
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+  if (!kIsWeb && Platform.isWindows) {
+    VideoPlayerWin.registerWith();
+  }
   runApp(const ULPVApp());
 }
 
@@ -225,12 +231,21 @@ class _WindowsDirectoryScanPageState extends State<WindowsDirectoryScanPage> {
   }
 
   Future<void> _stopPlayback() async {
-    await _videoOverlayPlayer.stop();
+    String? playbackStopError;
+    try {
+      await _videoOverlayPlayer.stop();
+    } catch (error) {
+      playbackStopError = '停止播放失败: $error';
+    }
+
     if (!mounted) {
       return;
     }
     setState(() {
       _showVideoOverlay = false;
+      if (playbackStopError != null) {
+        _error = playbackStopError;
+      }
     });
   }
 

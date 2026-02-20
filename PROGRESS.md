@@ -363,3 +363,20 @@
   3. `git status --short` 显示相关文件为 `D`（从索引移除）与配置文件修改，符合“远端删除、本地保留”。  
 - 阻塞/风险：无功能代码风险；若后续需要在仓库保留 IDE 配置，需要单独白名单特定文件。  
 - 下一步：由你执行 `git push`；随后在 GitHub Actions 页面手动触发 `Windows Build` 并下载 artifact 本地测试。  
+
+### 2026-02-20 11:15:26 | T4-5 | 待确认 -> 待确认（播放异常修复补丁）
+- 本轮目标：修复 Windows 构建包播放实况图时报 `UnimplementedError: initO has not been implemented` 且后续界面不可操作的问题。  
+- 实施内容：  
+  1. 根因定位：当前依赖仅包含 `video_player_android/avfoundation/web`，缺少 Windows 播放实现。  
+  2. 依赖修复：`pubspec.yaml` 新增 `video_player_win: ^3.2.2`。  
+  3. 启动修复：`lib/main.dart` 在 Windows 平台启动时执行 `VideoPlayerWin.registerWith()`。  
+  4. 稳定性修复：`lib/ui/playback/video_overlay_player.dart` 对 `initialize/pause/dispose` 增加容错清理，避免异常后状态卡死。  
+  5. UI 容错修复：`lib/main.dart` 的 `_stopPlayback()` 增加异常兜底并展示错误，不阻断后续切图/扫描交互。  
+  6. 回归测试补充：`test/widget_test.dart` 新增“`stop()` 抛平台异常时仍可切图”的场景用例。  
+- 验证证据（可复现）：  
+  1. 依赖证据：`pubspec.lock` 原仅有 `video_player_android`、`video_player_avfoundation`、`video_player_web`，无 Windows 实现。  
+  2. 代码证据：`main.dart` 已包含 Windows 平台注册逻辑；`video_overlay_player.dart` 与 `_stopPlayback()` 已加入异常兜底。  
+  3. 测试证据：已新增失败场景测试用例。  
+  4. 环境阻塞证据：本机执行 `flutter test test/widget_test.dart -r compact` 返回 `flutter : The term 'flutter' is not recognized...`。  
+- 阻塞/风险：当前环境无 Flutter/Dart 命令，无法本地执行自动化测试与 Windows 打包验证。  
+- 下一步：你推送后手动触发 GitHub Actions `Windows Build`，下载新 artifact 复测“选择 sample 目录 -> 播放实况 -> 切图/重扫仍可操作”；通过后再进行统一验收。  
